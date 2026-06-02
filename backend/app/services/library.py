@@ -37,9 +37,7 @@ class Library:
         return conn
 
     def _song_dir(self, song_id: str) -> Path:
-        d = self.storage_dir / "songs" / song_id
-        d.mkdir(parents=True, exist_ok=True)
-        return d
+        return self.storage_dir / "songs" / song_id
 
     def add_song(
         self,
@@ -53,6 +51,7 @@ class Library:
     ) -> SongSummary:
         song_id = uuid.uuid4().hex
         song_dir = self._song_dir(song_id)
+        song_dir.mkdir(parents=True, exist_ok=True)
         (song_dir / "vocal.wav").write_bytes(vocal_bytes)
         (song_dir / "instrumental.wav").write_bytes(instrumental_bytes)
 

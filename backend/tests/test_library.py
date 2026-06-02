@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.schemas import PitchCurve, PitchFrame
 
 
@@ -54,6 +56,11 @@ def test_get_missing_song_returns_none(tmp_library):
 def test_read_stem_rejects_unknown_kind(tmp_library):
     record = tmp_library.add_song(title="A", duration_sec=1.0, hop_sec=0.01,
                                   vocal_bytes=b"v", instrumental_bytes=b"i", curve=_curve("x"))
-    import pytest
     with pytest.raises(ValueError):
         tmp_library.read_stem(record.id, "drums")
+
+
+def test_read_stem_missing_song_does_not_create_dir(tmp_library, tmp_path):
+    with pytest.raises(FileNotFoundError):
+        tmp_library.read_stem("nonexistent", "vocal")
+    assert not (tmp_path / "songs" / "nonexistent").exists()
