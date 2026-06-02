@@ -18,3 +18,13 @@ def sine_440(sr: int) -> np.ndarray:
 def silence(sr: int) -> np.ndarray:
     """0.5 seconds of silence."""
     return np.zeros(sr // 2, dtype=np.float32)
+
+
+from pathlib import Path
+
+from app.services.library import Library
+
+
+@pytest.fixture
+def tmp_library(tmp_path: Path) -> Library:
+    return Library(storage_dir=tmp_path)
