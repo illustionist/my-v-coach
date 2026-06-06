@@ -22,6 +22,8 @@ export class AudioEngine {
   private micStream: MediaStream | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private loopRegion: LoopRegion | null = null;
+  private recorder: MediaRecorder | null = null;
+  private recordedChunks: BlobPart[] = [];
 
   constructor() {
     this.ctx = new AudioContext();
@@ -118,6 +120,32 @@ export class AudioEngine {
     };
     src.connect(this.workletNode);
     // Intentionally NOT connected to destination — avoids hearing your own mic.
+  }
+
+  startRecording(): void {
+    if (!this.micStream) throw new Error("enable mic before recording");
+    this.recordedChunks = [];
+    this.recorder = new MediaRecorder(this.micStream);
+    this.recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) this.recordedChunks.push(e.data);
+    };
+    this.recorder.start();
+  }
+
+  /** Stops recording and resolves with a playable object URL (or null if nothing recorded). */
+  stopRecording(): Promise<string | null> {
+    return new Promise((resolve) => {
+      if (!this.recorder) {
+        resolve(null);
+        return;
+      }
+      this.recorder.onstop = () => {
+        const blob = new Blob(this.recordedChunks, { type: "audio/webm" });
+        this.recorder = null;
+        resolve(this.recordedChunks.length ? URL.createObjectURL(blob) : null);
+      };
+      this.recorder.stop();
+    });
   }
 
   /**

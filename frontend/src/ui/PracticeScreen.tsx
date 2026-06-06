@@ -20,6 +20,8 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
   const [octaveTolerant, setOctaveTolerant] = useState(false);
   const [accuracy, setAccuracy] = useState(0);
   const [loop, setLoopState] = useState<LoopRegion | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
 
   const engineRef = useRef<AudioEngine | null>(null);
   const scorerRef = useRef(new SessionScorer({ octaveTolerant: false }));
@@ -105,6 +107,19 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
     engineRef.current?.setGuideVocal(v);
   }
 
+  async function toggleRecording() {
+    const engine = engineRef.current;
+    if (!engine) return;
+    if (recording) {
+      const url = await engine.stopRecording();
+      setPlaybackUrl(url);
+      setRecording(false);
+    } else {
+      engine.startRecording();
+      setRecording(true);
+    }
+  }
+
   return (
     <div>
       <button onClick={onBack}>← Library</button>
@@ -134,6 +149,10 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
           Clear loop
         </button>
         {loop && <span>Looping {loop.a.toFixed(1)}–{loop.b.toFixed(1)}s</span>}
+        <button onClick={() => void toggleRecording()}>
+          {recording ? "Stop recording" : "Record attempt"}
+        </button>
+        {playbackUrl && <audio controls src={playbackUrl} aria-label="Your recording" />}
       </div>
     </div>
   );
