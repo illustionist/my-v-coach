@@ -71,3 +71,16 @@ def test_unknown_stem_kind_returns_404(client):
     files = {"file": ("a4.wav", _mp3_like_wav_bytes(), "audio/wav")}
     song_id = client.post("/songs", files=files).json()["id"]
     assert client.get(f"/songs/{song_id}/stems/drums").status_code == 404
+
+
+def test_cors_allows_frontend_origin():
+    client = TestClient(create_app())
+    resp = client.options(
+        "/songs",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert resp.status_code in (200, 204)
+    assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
