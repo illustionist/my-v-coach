@@ -1,7 +1,9 @@
 import { afterEach, vi } from "vitest";
 import { listSongs, getSong, importSong, stemUrl, API_BASE } from "./client";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 test("listSongs GETs /songs and returns the array", async () => {
   const fetchMock = vi.fn().mockResolvedValue({

@@ -1,7 +1,9 @@
 import { vi, afterEach } from "vitest";
 import { AudioEngine } from "./engine";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 test("play without a loaded song rejects", async () => {
   // Minimal AudioContext stub so the constructor runs in jsdom.
