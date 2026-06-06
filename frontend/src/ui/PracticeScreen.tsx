@@ -6,6 +6,7 @@ import { PitchViewport } from "../render/coords";
 import { drawPitchView, UserPoint } from "../render/pitchCanvas";
 import { SessionScorer } from "../scoring/scorer";
 import { isOnPitch } from "../music/notes";
+import { shouldRestartLoop, LoopRegion } from "../audio/loop";
 import { GuideVocalSlider } from "./components/GuideVocalSlider";
 import { OctaveToggle } from "./components/OctaveToggle";
 import { ScoreReadout } from "./components/ScoreReadout";
@@ -18,6 +19,7 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
   const [guideVocal, setGuideVocal] = useState(0.25);
   const [octaveTolerant, setOctaveTolerant] = useState(false);
   const [accuracy, setAccuracy] = useState(0);
+  const [loop, setLoopState] = useState<LoopRegion | null>(null);
 
   const engineRef = useRef<AudioEngine | null>(null);
   const scorerRef = useRef(new SessionScorer({ octaveTolerant: false }));
@@ -75,6 +77,9 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
       const loop = () => {
         if (cancelled || !ctx) return;
         const now = engine.currentTime;
+        if (shouldRestartLoop(engine.loop, now)) {
+          void engine.play(engine.loop!.a);
+        }
         const last = [...trailRef.current].reverse().find((p) => p.hz > 0);
         const onPitch = last ? isOnPitch(last.hz, refHzAt(now), { octaveTolerant }) : false;
         drawPitchView(ctx, vp, {
@@ -110,6 +115,25 @@ export function PracticeScreen({ songId, onBack }: { songId: string; onBack: () 
         <OctaveToggle checked={octaveTolerant} onChange={setOctaveTolerant} />
         <ScoreReadout accuracy={accuracy} />
         <button onClick={() => engineRef.current?.calibrate()}>Calibrate latency</button>
+        <button
+          onClick={() => {
+            const a = engineRef.current?.currentTime ?? 0;
+            const region = { a, b: a + 8 };
+            engineRef.current?.setLoop(region);
+            setLoopState(region);
+          }}
+        >
+          Loop 8s from here
+        </button>
+        <button
+          onClick={() => {
+            engineRef.current?.setLoop(null);
+            setLoopState(null);
+          }}
+        >
+          Clear loop
+        </button>
+        {loop && <span>Looping {loop.a.toFixed(1)}–{loop.b.toFixed(1)}s</span>}
       </div>
     </div>
   );

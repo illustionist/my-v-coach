@@ -1,6 +1,7 @@
 import { SongDetail } from "../api/types";
 import { stemUrl } from "../api/client";
 import { detectPitch } from "./pitchDetect";
+import { LoopRegion } from "./loop";
 
 export type UserPitchHandler = (hz: number, atSongTime: number) => void;
 
@@ -20,6 +21,7 @@ export class AudioEngine {
 
   private micStream: MediaStream | null = null;
   private workletNode: AudioWorkletNode | null = null;
+  private loopRegion: LoopRegion | null = null;
 
   constructor() {
     this.ctx = new AudioContext();
@@ -92,6 +94,14 @@ export class AudioEngine {
 
   setLatencyOffset(seconds: number): void {
     this.latencyOffsetSec = seconds;
+  }
+
+  setLoop(region: LoopRegion | null): void {
+    this.loopRegion = region;
+  }
+
+  get loop(): LoopRegion | null {
+    return this.loopRegion;
   }
 
   async enableMic(onPitch: UserPitchHandler): Promise<void> {
