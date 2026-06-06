@@ -1,7 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
 import { App } from "./App";
+import * as client from "./api/client";
 
-test("renders the app title", () => {
+test("starts on the library screen", async () => {
+  vi.spyOn(client, "listSongs").mockResolvedValue([]);
   render(<App />);
-  expect(screen.getByText(/my-v-coach/i)).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText(/your songs/i)).toBeInTheDocument());
 });
